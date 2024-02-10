@@ -39,7 +39,7 @@ Namespace Tree of the project at depth level 3.
 
 
 ## Roadmap
-- [ ]   Boolean Logic
+- [x]   Boolean Logic
 - [ ]   Boolean Arithmetic
 - [ ]   Memory
 - [ ]   Machine Language
