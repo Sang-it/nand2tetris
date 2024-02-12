@@ -11,6 +11,7 @@ CHIP Mux {
     OUT out;
 
     PARTS:
+    //(a && !sel) || ( b && sel)
     Nand(a=sel, b=b, out=nandBSel);
     Nand(a=sel, b=sel, out=notSel);
     Nand(a=a, b=notSel, out=nandANotSel);
