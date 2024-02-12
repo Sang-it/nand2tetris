@@ -8,7 +8,7 @@
 
 
 This repository documents my learning and progress as I attempt to build a modern computer from NAND gates while reading [The Elements of Computing Systems](https://mitpress.mit.edu/books/elements-computing-systems).
-[Here](https://circuitverse.org/users/224071) is most of the chips visualized in logic gates.
+Most of the chips are visualized in logic gates [here](https://circuitverse.org/users/224071).
 
 
 ## Technologies
