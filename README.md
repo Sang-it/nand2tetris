@@ -1,3 +1,4 @@
+
 # NandToTetris
 
 ## Table of contents
@@ -6,11 +7,13 @@
 * [Roadmap](#roadmap)
 
 
-This repository documents my learning and progress as I attempt to build a modern computer from NAND gates while reading [The Elements of Computing Systems](https://mitpress.mit.edu/books/elements-computing-systems).
+This repository documents my learning and progress as I attempt to build a modern computer from NAND gates while reading [The Elements of Computing Systems](https://mitpress.mit.edu/books/elements-computing-systems). [Here](https://circuitverse.org/users/224071) is most of the chips visualized in logic gates.
+
 
 ## Technologies
  * [The Nand to Tetris Software Suite](https://www.nand2tetris.org/software)
  * [Go 1.18.2 or later](https://go.dev/)
+
 
 ## Project structure
 Namespace Tree of the project at depth level 3.
@@ -39,15 +42,15 @@ Namespace Tree of the project at depth level 3.
 
 
 ## Roadmap
-- [x]   Boolean Logic
-- [x]   Boolean Arithmetic
-- [ ]   Sequence Logic
-- [ ]   Machine Language
-- [ ]   Computer Architecture
-- [ ]   Assembler
-- [ ]   Virtual Machine I: Processing
-- [ ]   Virtual Machine II: Control
-- [ ]   High-Level Language
-- [ ]   Compiler I: Syntax Analysis
-- [ ]   Compiler II: Code generation
-- [ ]   Operating System
+- [X]  Boolean Logic
+- [x]  Boolean Arithmetic
+- [x]  Memory
+- [ ]  Machine Language
+- [ ]  Computer Architecture
+- [ ]  Assembler
+- [ ]  Virtual Machine I: Processing
+- [ ]  Virtual Machine II: Control
+- [ ]  High-Level Language
+- [ ]  Compiler I: Syntax Analysis
+- [ ]  Compiler II: Code generation
+- [ ]  Operating System
