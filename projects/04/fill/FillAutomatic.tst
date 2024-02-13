@@ -3,15 +3,15 @@
 // by Nisan and Schocken, MIT Press.
 // File name: projects/04/fill/FillAutomatic.tst
 
-// This script can be used to test the Fill program automatically, 
+// This script can be used to test the Fill program automatically,
 // rather than interactively. Specifically, the script sets the keyboard
-// memory map (RAM[24576]) to 0, runs a million cycles, then it sets it 
-// to 1, runs a million cycles, then it sets it again to 0, and runs a 
+// memory map (RAM[24576]) to 0, runs a million cycles, then it sets it
+// to 1, runs a million cycles, then it sets it again to 0, and runs a
 // million cycles. These actions simulate the events of leaving the keyboard
 // untouched, pressing some key, and then releasing the key.
 // After each on of these simulated events, the script outputs the values
 // of selected registers from the screen memory map (RAM[16384] - RAM[24576]).
-// This is done in order to test that these registers are set to 000...0 or to 
+// This is done in order to test that these registers are set to 000...0 or to
 // 111....1 (-1 in decimal), as mandated by how the Fill program should
 // react to keyboard events.
 
