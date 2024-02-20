@@ -19,7 +19,6 @@
  * their new values only in the next cycle.
  */
 CHIP CPU {
-
     IN  inM[16],         // M value input  (M = contents of RAM[A])
         instruction[16], // Instruction for execution
         reset;           // Signals whether to restart the current
@@ -27,10 +26,51 @@ CHIP CPU {
                          // the current program (reset==0).
 
     OUT outM[16],        // M value output
-        writeM,          // Write to M? 
+        writeM,          // Write to M?
         addressM[15],    // Address in data memory (of M)
         pc[15];          // Address of next instruction
 
     PARTS:
-    //// Replace this comment with your code.
+    Not(in = instruction[15], out = isA);
+    Not(in = isA, out = isC);
+
+    And(a = isC, b = instruction[5], out = isLoadAluOut);
+    Mux16(a = instruction, b = outALU, sel = isLoadAluOut, out = inAR);
+
+    Or(a = isA, b = instruction[5], out = isLoadAR);
+    ARegister(in = inAR, load = isLoadAR, out = outAR, out[0..14] = addressM);
+
+    Mux16(a = outAR, b = inM, sel = instruction[12], out = outAM);
+
+    And(a = isC, b = instruction[3], out = writeM);
+
+    And(a = instruction[4], b = isC, out = isLoadDR);
+    DRegister(in = outALU, load = isLoadDR, out = outDR);
+
+    And(a = isC, b = instruction[6], out = no);
+    And(a = isC, b = instruction[7], out = f);
+    And(a = isC, b = instruction[8], out = ny);
+    And(a = isC, b = instruction[9], out = zy);
+    And(a = isC, b = instruction[10], out = nx);
+    And(a = isC, b = instruction[11], out = zx);
+
+    ALU(x = outDR, y = outAM, zx = zx, nx = nx, zy = zy, ny = ny, f = f, no = no, out = outALU, out = outM, zr=zr, ng=ng);
+
+    And(a = isC, b = instruction[0], out = isGT);
+    And(a = isC, b = instruction[1], out = isEQ);
+    And(a = isC, b = instruction[2], out = isLT);
+
+    And(a = ng, b = isLT, out = isLtJump);
+    And(a = zr, b = isEQ, out = isEqJump);
+
+    Not(in = ng, out = notNg);
+    Not(in = zr, out = notZr);
+    And(a = notNg, b = notZr, out = isOutGt);
+
+    And(a = isOutGt, b = isGT, out = isGtJump);
+
+    Or(a = isLtJump, b = isEqJump, out = isJump);
+    Or(a = isJump, b = isGtJump, out = jump);
+
+    PC(in = outAR, load = jump, inc = true, reset = reset, out[0..14] = pc);
 }
