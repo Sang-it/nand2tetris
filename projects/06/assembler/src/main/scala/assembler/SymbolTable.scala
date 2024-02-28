@@ -22,9 +22,7 @@ class SymbolTable {
     symbols += symbolName -> address
   }
 
-  def get(symbolName: String): Option[Int] = {
-    symbols.get(symbolName)
-  }
+  def get(symbolName: String): Option[Int] = symbols.get(symbolName)
 
   def getNextVarAddress(): Int = {
     nextVariableAddress += 1

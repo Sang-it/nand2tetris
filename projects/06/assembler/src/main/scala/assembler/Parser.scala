@@ -5,8 +5,6 @@ import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.InputStreamReader
 import java.nio.file.Files
-import scala.ValueOf
-
 import fastparse._, NoWhitespace._
 
 object I {
@@ -32,122 +30,118 @@ object I {
 
   object CInstruction {
     val destinationsMap = Map(
-      ("" -> "000"),
-      ("M" -> "001"),
-      ("D" -> "010"),
-      ("MD" -> "011"),
-      ("A" -> "100"),
-      ("AM" -> "101"),
-      ("AD" -> "110"),
-      ("AMD" -> "111")
+      "" -> "000",
+      "M" -> "001",
+      "D" -> "010",
+      "MD" -> "011",
+      "A" -> "100",
+      "AM" -> "101",
+      "AD" -> "110",
+      "AMD" -> "111"
     )
 
     val computationsMapNotA = Map(
-      ("0" -> "101010"),
-      ("1" -> "111111"),
-      ("-1" -> "111010"),
-      ("D" -> "001100"),
-      ("A" -> "110000"),
-      ("!D" -> "001101"),
-      ("!A" -> "110001"),
-      ("-D" -> "001111"),
-      ("-A" -> "110011"),
-      ("D+1" -> "011111"),
-      ("A+1" -> "110111"),
-      ("D-1" -> "001110"),
-      ("A-1" -> "110010"),
-      ("D+A" -> "000010"),
-      ("D-A" -> "010011"),
-      ("A-D" -> "000111"),
-      ("D&A" -> "000000"),
-      ("D|A" -> "010101")
+      "0" -> "101010",
+      "1" -> "111111",
+      "-1" -> "111010",
+      "D" -> "001100",
+      "A" -> "110000",
+      "!D" -> "001101",
+      "!A" -> "110001",
+      "-D" -> "001111",
+      "-A" -> "110011",
+      "D+1" -> "011111",
+      "A+1" -> "110111",
+      "D-1" -> "001110",
+      "A-1" -> "110010",
+      "D+A" -> "000010",
+      "D-A" -> "010011",
+      "A-D" -> "000111",
+      "D&A" -> "000000",
+      "D|A" -> "010101"
     )
+
     val computationsMapA = Map(
-      ("M" -> "110000"),
-      ("!M" -> "110001"),
-      ("-M" -> "110011"),
-      ("M+1" -> "110111"),
-      ("M-1" -> "110010"),
-      ("D+M" -> "000010"),
-      ("D-M" -> "010011"),
-      ("M-D" -> "000111"),
-      ("D&M" -> "000000"),
-      ("D|M" -> "010101")
+      "M" -> "110000",
+      "!M" -> "110001",
+      "-M" -> "110011",
+      "M+1" -> "110111",
+      "M-1" -> "110010",
+      "D+M" -> "000010",
+      "D-M" -> "010011",
+      "M-D" -> "000111",
+      "D&M" -> "000000",
+      "D|M" -> "010101"
     )
 
     val jumpsMap = Map(
-      ("" -> "000"),
-      ("JGT" -> "001"),
-      ("JEQ" -> "010"),
-      ("JGE" -> "011"),
-      ("JLT" -> "100"),
-      ("JNE" -> "101"),
-      ("JLE" -> "110"),
-      ("JMP" -> "111")
+      "" -> "000",
+      "JGT" -> "001",
+      "JEQ" -> "010",
+      "JGE" -> "011",
+      "JLT" -> "100",
+      "JNE" -> "101",
+      "JLE" -> "110",
+      "JMP" -> "111"
     )
 
     def destFromExpression(expr: String): Destination =
-      Destination(expr, destinationsMap(expr))
+      Destination(expr, destinationsMap.getOrElse(expr, ""))
 
     def compFromExpression(expr: String): Computation = {
-      computationsMapNotA.get(expr) match {
-        case Some(v) => Computation(expr, "0" + v) // a=0
-        case None =>
-          computationsMapA.get(expr) match {
-            case Some(v) => Computation(expr, "1" + v) // a=1
-            case None =>
-              throw new RuntimeException("Expression not allowed: " + expr)
-          }
-      }
+      val machineCode = computationsMapNotA.getOrElse(
+        expr,
+        computationsMapA.getOrElse(
+          expr,
+          throw new RuntimeException(s"Expression not allowed: $expr")
+        )
+      )
+      Computation(
+        expr,
+        if (computationsMapA.contains(expr)) "1" else "0" + machineCode
+      )
     }
 
-    def jumpFromExpression(expr: String): Jump = Jump(expr, jumpsMap(expr))
-
+    def jumpFromExpression(expr: String): Jump =
+      Jump(expr, jumpsMap.getOrElse(expr, ""))
   }
 }
 
-/** The parser.
-  * @param br1
-  *   BR for first pass, picking labels
-  * @param br2
-  *   BR for second pass, parsing
-  */
 class Parser(
-    br1: BufferedReader,
-    br2: BufferedReader,
-    symbolTable: SymbolTable
+    private val br1: BufferedReader,
+    private val br2: BufferedReader,
+    private val symbolTable: SymbolTable
 ) {
   import Parser._
 
-  // FIRST PASS
   buildSymbolTable()
 
-  // SECOND PASS, iterated from main
-  // TODO handle FAILURE CASE when parsing!
   def next(): Option[I.RealInstruction] = {
     Option(br2.readLine()) match {
-      case None => { // end of input
+      case None =>
         br1.close()
         None
-      }
       case Some(line) =>
-        parse(line, FinalP).get.value match {
-          case Some(i: I.RealInstruction) => Option(i)
-          case _                          => next() // if not A or C, skip
+        parseInstruction(line) match {
+          case Some(instruction: I.RealInstruction) => Some(instruction)
+          case _                                    => next()
         }
     }
   }
 
+  private def parseInstruction(line: String): Option[I.Instruction] =
+    parse(line, FinalP).get.value
+
   private def buildSymbolTable(): Unit = {
-    var line: String = null
     var realInstructionsCounter = 0
     try {
+      var line: String = null
       while ({ line = br1.readLine(); line != null }) {
-        parse(line, FinalP).get.value match {
+        parseInstruction(line) match {
           case Some(I.SymbolInstruction(symbol)) =>
             symbolTable.add(symbol, realInstructionsCounter)
           case Some(_) => realInstructionsCounter += 1
-          case _       => // if empty line, or just a comment
+          case _       =>
         }
       }
     } finally {
@@ -176,9 +170,7 @@ object Parser {
 
   def Letter[$: P] = P(CharPred(_.isLetter))
   def Digit[$: P] = P(CharPred(_.isDigit))
-  def SymFirst[$: P] = P(
-    Letter | "." | "_" | "$" | ":"
-  )
+  def SymFirst[$: P] = P(Letter | "." | "_" | "$" | ":")
 
   def Symbol[$: P] = P(SymFirst ~ (SymFirst | Digit).rep)
 
@@ -186,8 +178,7 @@ object Parser {
   def Whitespace[$: P] = P(" " | "\t")
   def Comment[$: P] = P("//" ~ AnyChar.rep ~ End)
 
-  def Number[$: P]: P[Int] =
-    Digit.rep(min = 1).!.map(_.toInt)
+  def Number[$: P]: P[Int] = Digit.rep(min = 1).!.map(_.toInt)
 
   def SymbolInstruction[$: P] =
     P("(" ~ Symbol.! ~ ")").map(s => I.SymbolInstruction(s))

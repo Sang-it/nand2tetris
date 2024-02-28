@@ -5,41 +5,46 @@ import java.nio.charset.StandardCharsets
 import java.io.Writer
 import java.io.PrintWriter
 
-class CodeGenerator(outWriter: Writer, symbolTable: SymbolTable) {
+class CodeGenerator(
+    private val outWriter: Writer,
+    private val symbolTable: SymbolTable
+) {
 
   def write(instruction: I.RealInstruction): Unit = {
-    val res: String = instruction match {
-      case I.AInstruction(Left(const)) =>
-        paddedAInstruction(const)
-      case I.AInstruction(Right(symbolName)) => {
-        symbolTable.get(symbolName) match {
-          case Some(value) =>
-            paddedAInstruction(value)
-          case _ => {
-            val varAddress = symbolTable.getNextVarAddress()
-            symbolTable.add(symbolName, varAddress)
-            paddedAInstruction(varAddress)
-          }
-        }
-      }
-      case I.CInstruction(dest, comp, jump) => {
-        "111" + comp.machineCode + dest.machineCode + jump.machineCode
-      }
+    val res = instruction match {
+      case I.AInstruction(value) => handleAInstruction(value)
+      case I.CInstruction(dest, comp, jump) =>
+        s"111${comp.machineCode}${dest.machineCode}${jump.machineCode}"
     }
-    outWriter.write(res + "\n")
+    outWriter.write(s"$res\n")
   }
 
-  private def paddedAInstruction(decimalValue: Int): String = {
+  private def handleAInstruction(value: Either[Int, String]): String = {
+    val decimalValue = value.fold(identity, resolveSymbol)
     val binaryValue = decimalValue.toBinaryString
-    val padZeros = "0" * (15 - binaryValue.length)
-    "0" + padZeros + binaryValue
+    val paddedBinaryValue = padZeros(binaryValue)
+    s"0$paddedBinaryValue"
+  }
+
+  private def resolveSymbol(symbolName: String): Int = {
+    symbolTable.get(symbolName) match {
+      case Some(value) => value
+      case None =>
+        val varAddress = symbolTable.getNextVarAddress()
+        symbolTable.add(symbolName, varAddress)
+        varAddress
+    }
+  }
+
+  private def padZeros(binaryValue: String): String = {
+    val padLength = 15 - binaryValue.length
+    "0" * padLength + binaryValue
   }
 
   def close(): Unit = {
     outWriter.close()
   }
 }
-
 object CodeGenerator {
 
   def apply(outputFile: File, symbolTable: SymbolTable): CodeGenerator = {

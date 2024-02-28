@@ -15,46 +15,48 @@ object Main {
 
   def main(args: Array[String]): Unit = {
 
-    val res = handleArgs(args)
-    if (res.isEmpty) return
+    handleArgs(args) match {
+      case Some((inputFile, outputFile)) =>
+        val symbolTable = new SymbolTable()
+        val parser = Parser(inputFile, symbolTable)
+        val codeGenerator = CodeGenerator(outputFile, symbolTable)
 
-    val Some((inputFile, outputFile)) = res: @unchecked
+        var instruction: Option[I.RealInstruction] = null
+        while ({ instruction = parser.next(); instruction.isDefined }) {
+          codeGenerator.write(instruction.get)
+        }
 
-    val symbolTable = new SymbolTable()
-    val parser = Parser(inputFile, symbolTable)
-    val codeGenerator = CodeGenerator(outputFile, symbolTable)
+        parser.close()
+        codeGenerator.close()
 
-    var instruction: Option[I.RealInstruction] = null
-    while ({ instruction = parser.next(); instruction.isDefined }) {
-      codeGenerator.write(instruction.get)
+      case None =>
+        println("Exiting program.")
     }
 
-    parser.close()
-    codeGenerator.close()
   }
 
   private def handleArgs(args: Array[String]): Option[(File, File)] = {
-    if (args.length < 1) {
-      println("You must provide a file name!")
-      None
-    } else {
-      val fileName = args(0)
-      if (fileName == null || fileName.trim.isEmpty || fileName.length <= 4) {
+    args.headOption
+      .flatMap { fileName =>
+        if (
+          fileName == null || fileName.trim.isEmpty || fileName.length <= 4 || !fileName
+            .endsWith(".asm")
+        ) {
+          println(
+            "Invalid file name or extension! File name must have a '.asm' extension."
+          )
+          None
+        } else {
+          val inputFile = new File(fileName)
+          val outputFile =
+            new File(inputFile.getParent, fileName.dropRight(4) + ".hack")
+          Some((inputFile, outputFile))
+        }
+      }
+      .orElse {
         println("You must provide a file name!")
         None
       }
-
-      val (name, ext) = fileName.splitAt(fileName.length - 4)
-      println("NAME: " + name)
-      println("ext: " + ext)
-      if (ext != ".asm") {
-        println("File must have '.asm' extension!")
-        None
-      } else {
-        val inputFile = new File(fileName)
-        Option((inputFile, new File(inputFile.getParent, name + ".hack")))
-      }
-    }
   }
 
 }
