@@ -1,6 +1,7 @@
 #ifndef VM_PARSER
 #define VM_PARSER
 
+#include <fstream>
 #include <iostream>
 #include <optional>
 #include <sstream>
@@ -106,8 +107,36 @@ public:
   };
 
   CommandType getCommandType() { return command_type; };
+
   ArithmeticOperation getArithmeticOperation() {
     return arithmetic_operation.value();
+  };
+
+  int16_t getOffset() { return offset.value(); };
+
+  MemorySegment getMemorySegment() { return memory_segment.value(); }
+
+  MemorySegmentAccessType getAccessType() { return access_type.value(); }
+};
+
+class CommandList {
+public:
+  static std::vector<Command> parseFile(std::string path) {
+    std::vector<Command> command_list;
+
+    std::ifstream input_file(path);
+    if (!input_file.is_open()) {
+      std::cerr << "Error opening file!" << std::endl;
+    }
+
+    std::string line;
+    while (std::getline(input_file, line)) {
+      Command command(line);
+      command_list.push_back(command);
+    }
+
+    input_file.close();
+    return command_list;
   };
 };
 

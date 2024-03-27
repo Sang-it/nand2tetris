@@ -54,6 +54,27 @@ private:
     return ss.str();
   };
 
+  std::string processConstant(Command command) {
+    std::stringstream ss;
+    ss << "@" << command.getOffset() << "\nD=A\n@SP\nA=M\nM=D\n@SP\nM=M+1\n";
+    return ss.str();
+  }
+
+  std::string processPushCommand(Command command) {
+    switch (command.getMemorySegment()) {
+    case CONSTANT: {
+      return processConstant(command);
+    }
+    default:
+      return "";
+    }
+  };
+
+  std::string processPopCommand(Command command) {
+    // TODO
+    return "";
+  };
+
   std::string processArithmeticCommand(Command command) {
     switch (command.getArithmeticOperation()) {
     case ADD:
@@ -76,9 +97,11 @@ private:
       return processNeg(command);
     }
   };
-  std::string processMemorySegmentAccessCommand(Command command){
-      //TODO
-      return "";
+  std::string processMemorySegmentAccessCommand(Command command) {
+    if (command.getAccessType() == PUSH) {
+      return processPushCommand(command);
+    }
+    return processPopCommand(command);
   };
 
 public:
@@ -87,6 +110,16 @@ public:
       return processArithmeticCommand(command);
     }
     return processMemorySegmentAccessCommand(command);
+  };
+
+  std::string processCommandList(std::vector<Command> command_list,
+                                 std::string path) {
+    std::stringstream ss;
+    for (Command command : command_list) {
+      std::string processed_command = processCommand(command);
+      ss << processed_command << "\n";
+    }
+    return ss.str();
   };
 };
 
