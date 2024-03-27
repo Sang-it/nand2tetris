@@ -46,9 +46,9 @@ Namespace Tree of the project at depth level 3.
 - [X]  Boolean Logic
 - [x]  Boolean Arithmetic
 - [x]  Memory
-- [ ]  Machine Language
-- [ ]  Computer Architecture
-- [ ]  Assembler
+- [x]  Machine Language
+- [x]  Computer Architecture
+- [x]  Assembler
 - [ ]  Virtual Machine I: Processing
 - [ ]  Virtual Machine II: Control
 - [ ]  High-Level Language
