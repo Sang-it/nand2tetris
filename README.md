@@ -48,8 +48,8 @@ Namespace Tree of the project at depth level 3.
 - [x]  Memory
 - [x]  Machine Language
 - [x]  Computer Architecture
-- [x]  Assembler
-- [ ]  Virtual Machine I: Processing
+- [x]  Assembler -> Scala
+- [x]  Virtual Machine I: Processing -> C++
 - [ ]  Virtual Machine II: Control
 - [ ]  High-Level Language
 - [ ]  Compiler I: Syntax Analysis
