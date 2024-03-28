@@ -13,7 +13,6 @@ Most of the chips are visualized in logic gates [here](https://circuitverse.org/
 
 ## Technologies
  * [The Nand to Tetris Software Suite](https://www.nand2tetris.org/software)
- * [Go 1.18.2 or later](https://go.dev/)
 
 
 ## Project structure
