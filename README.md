@@ -30,16 +30,6 @@ Namespace Tree of the project at depth level 3.
     |   |   +---08 Virtual Machine 2 (control)
     |   |   +---09 High-Level Language
     |   |   +---10 Compiler I: Syntax Analysis
-    |   |   +---11
-    |   |   +---12
-    |   |   +---13
-    |   |   +---demo
-    |   +---tools
-    |   |   +---bin
-    |   |   +---builtInChips
-    |   |   +---builtInVMCode
-    |   |   +---OS
-
 
 ## Roadmap
 - [X]  Boolean Logic
@@ -49,7 +39,7 @@ Namespace Tree of the project at depth level 3.
 - [x]  Computer Architecture
 - [x]  Assembler -> Scala
 - [x]  Virtual Machine I: Processing -> C++
-- [ ]  Virtual Machine II: Control
+- [x]  Virtual Machine II: Control -> C++
 - [ ]  High-Level Language
 - [ ]  Compiler I: Syntax Analysis
 - [ ]  Compiler II: Code generation
