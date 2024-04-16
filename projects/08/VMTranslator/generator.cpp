@@ -4,10 +4,17 @@
 #include "parser.cpp"
 #include <sstream>
 
+struct GeneratorReturn {
+  std::string asm_text;
+  int16_t jump_count;
+  int16_t call_count;
+};
+
 class Generator {
 private:
-  int count = 0;
   std::string filename;
+  int16_t jump_count;
+  int16_t call_count;
 
   std::string processAdd(Command command) {
     return "@SP\nAM=M-1\nD=M\nA=A-1\nM=M+D\n";
@@ -29,29 +36,30 @@ private:
   };
   std::string processEq(Command command) {
     std::stringstream ss;
-    ss << "@SP\nAM=M-1\nD=M\nA=A-1\nD=M-D\n@TRUE" << count << "\nD;JEQ\n"
-       << "@SP\nAM=M-1\nM=0\n@SP\nM=M+1\n@CONTINUE" << count << "\n0;JMP\n(TRUE"
-       << count << ")\n@SP\nAM=M-1\nM=-1\n@SP\nM=M+1\n(CONTINUE" << count
+    ss << "@SP\nAM=M-1\nD=M\nA=A-1\nD=M-D\n@TRUE" << jump_count << "\nD;JEQ\n"
+       << "@SP\nAM=M-1\nM=0\n@SP\nM=M+1\n@CONTINUE" << jump_count
+       << "\n0;JMP\n(TRUE" << jump_count
+       << ")\n@SP\nAM=M-1\nM=-1\n@SP\nM=M+1\n(CONTINUE" << jump_count++
        << ")\n";
-    count = count + 1;
     return ss.str();
   };
   std::string processGt(Command command) {
     std::stringstream ss;
-    ss << "@SP\nAM=M-1\nD=M\nA=A-1\nD=M-D\n@TRUE" << count << "\nD;JGT\n"
-       << "@SP\nAM=M-1\nM=0\n@SP\nM=M+1\n@CONTINUE" << count << "\n0;JMP\n(TRUE"
-       << count << ")\n@SP\nAM=M-1\nM=-1\n@SP\nM=M+1\n(CONTINUE" << count
+    ss << "@SP\nAM=M-1\nD=M\nA=A-1\nD=M-D\n@TRUE" << jump_count << "\nD;JGT\n"
+       << "@SP\nAM=M-1\nM=0\n@SP\nM=M+1\n@CONTINUE" << jump_count
+       << "\n0;JMP\n(TRUE" << jump_count
+       << ")\n@SP\nAM=M-1\nM=-1\n@SP\nM=M+1\n(CONTINUE" << jump_count++
        << ")\n";
-    count = count + 1;
     return ss.str();
   };
   std::string processLt(Command command) {
+
     std::stringstream ss;
-    ss << "@SP\nAM=M-1\nD=M\nA=A-1\nD=M-D\n@TRUE" << count << "\nD;JLT\n"
-       << "@SP\nAM=M-1\nM=0\n@SP\nM=M+1\n@CONTINUE" << count << "\n0;JMP\n(TRUE"
-       << count << ")\n@SP\nAM=M-1\nM=-1\n@SP\nM=M+1\n(CONTINUE" << count
+    ss << "@SP\nAM=M-1\nD=M\nA=A-1\nD=M-D\n@TRUE" << jump_count << "\nD;JLT\n"
+       << "@SP\nAM=M-1\nM=0\n@SP\nM=M+1\n@CONTINUE" << jump_count
+       << "\n0;JMP\n(TRUE" << jump_count
+       << ")\n@SP\nAM=M-1\nM=-1\n@SP\nM=M+1\n(CONTINUE" << jump_count++
        << ")\n";
-    count = count + 1;
     return ss.str();
   };
 
@@ -272,8 +280,55 @@ private:
     }
   };
 
+  std::string processFunctionCommand(Command command) {
+    std::stringstream ss;
+    ss << "(" << command.getFunctionName() << ")\n";
+    int16_t number_of_args = command.getNumberOfLocalVars();
+
+    Command _command("push constant 0");
+    while (number_of_args--) {
+      ss << processConstant(_command);
+    }
+    return ss.str();
+  }
+
+  std::string processReturnCommand(Command command) {
+    std::stringstream ss;
+    std::initializer_list<const char *> array = {"THAT", "THIS", "ARG", "LCL"};
+    ss << "@LCL\nD=M\n@R13\nM=D\n@5\nA=D-A\nD=M\n@R14\nM=D\n@SP\nAM=M-1\nD=M\n"
+          "@ARG\nA=M\nM=D\n@ARG\nD=M+1\n@SP\nM=D\n";
+    for (const char *symbol : array) {
+      ss << "@R13\nD=M-1\nAM=D\nD=M\n@" << symbol << "\nM=D\n";
+    }
+    ss << "\n@R14\nA=M\n0;JMP\n";
+    return ss.str();
+  }
+
+  std::string processCallCommand(Command command) {
+    std::stringstream ss;
+    std::initializer_list<const char *> array = {"LCL", "ARG", "THIS", "THAT"};
+
+    ss << "@" << command.getFunctionName() << "ReturnAddress" << call_count
+       << "\nD=A\n@SP\nA=M\nM=D\n@SP\nM=M+1\n";
+
+    for (const char *item : array) {
+      ss << "@" << item << "\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n";
+    }
+
+    ss << "@" << command.getNumberOfArgs()
+       << "\nD=A\n@5\nD=D+A\n@SP\nD=M-D\n@ARG\nM=D\n@SP\nD=M\n@LCL\nM=D\n@"
+       << command.getFunctionName() << "\n0;JMP\n(" << command.getFunctionName()
+       << "ReturnAddress" << call_count++ << ")\n";
+
+    return ss.str();
+  }
+
 public:
-  Generator(std::string filename) { this->filename = filename; };
+  Generator(std::string filename, int16_t jump_count, int16_t call_count) {
+    this->filename = filename;
+    this->jump_count = jump_count;
+    this->call_count = call_count;
+  };
 
   std::string processCommand(Command command) {
     switch (command.getCommandType()) {
@@ -286,18 +341,49 @@ public:
     case BRANCH_COMMAND: {
       return processBranchCommand(command);
     }
+    case FUNCTION: {
+      return processFunctionCommand(command);
+    }
+    case RETURN: {
+      return processReturnCommand(command);
+    }
+    case CALL: {
+      return processCallCommand(command);
+    }
     }
   };
 
-  std::string processCommandList(std::vector<Command> command_list,
-                                 std::string path) {
+  GeneratorReturn processCommandList(std::vector<Command> command_list) {
     std::stringstream ss;
     for (Command command : command_list) {
       std::string processed_command = processCommand(command);
       ss << processed_command << "\n";
     }
-    return ss.str();
+
+    return {ss.str(), jump_count, call_count};
   };
+
+  static std::string processSysInitCommand() {
+    std::stringstream ss;
+
+    Command command("call Sys.init 0");
+    std::initializer_list<const char *> array = {"LCL", "ARG", "THIS", "THAT"};
+
+    ss << "@256\nD=A\n@SP\nM=D\n"
+       << "@" << command.getFunctionName()
+       << "ReturnAddress0\nD=A\n@SP\nA=M\nM=D\n@SP\nM=M+1\n";
+
+    for (const char *item : array) {
+      ss << "@" << item << "\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n";
+    }
+
+    ss << "@" << command.getNumberOfArgs()
+       << "\nD=A\n@5\nD=D+A\n@SP\nD=M-D\n@ARG\nM=D\n@SP\nD=M\n@LCL\nM=D\n@"
+       << command.getFunctionName() << "\n0;JMP\n(" << command.getFunctionName()
+       << "ReturnAddress0)\n";
+
+    return ss.str();
+  }
 };
 
 #endif

@@ -22,16 +22,30 @@ enum MemorySegment {
 enum ArithmeticOperation { ADD, SUB, NEG, EQ, GT, LT, AND, OR, NOT };
 enum MemorySegmentAccessType { PUSH, POP };
 enum BranchType { LABEL, IF_GOTO, GOTO };
-enum CommandType { MEMORY_SEGMENT, ARITHMETIC_OPERATION, BRANCH_COMMAND };
+enum CommandType {
+  MEMORY_SEGMENT,
+  ARITHMETIC_OPERATION,
+  BRANCH_COMMAND,
+  FUNCTION,
+  RETURN,
+  CALL
+};
 
 class Command {
 private:
   std::optional<int16_t> offset;
   std::optional<MemorySegment> memory_segment;
   std::optional<MemorySegmentAccessType> access_type;
+
   std::optional<ArithmeticOperation> arithmetic_operation;
+
   std::optional<BranchType> branch_type;
   std::optional<std::string> label;
+
+  std::optional<std::string> function_name;
+  std::optional<int16_t> number_of_local_variables;
+  std::optional<int16_t> number_of_args;
+
   CommandType command_type;
 
   std::string removeComments(const std::string &line) {
@@ -120,17 +134,32 @@ public:
   Command(std::string line) {
     std::vector<std::string> splits = splitBySpace(removeComments(line));
     if (splits.size() == 1) {
-      this->command_type = ARITHMETIC_OPERATION;
-      this->arithmetic_operation = getOperationKind(splits[0]);
+      if (splits[0] == "return") {
+        this->command_type = RETURN;
+      } else {
+        this->command_type = ARITHMETIC_OPERATION;
+        this->arithmetic_operation = getOperationKind(splits[0]);
+      }
     } else if (splits.size() == 2) {
       this->command_type = BRANCH_COMMAND;
       this->branch_type = getBranchKind(splits[0]);
       this->label = splits[1];
     } else if (splits.size() == 3) {
-      this->command_type = MEMORY_SEGMENT;
-      this->access_type = getAccessKind(splits[0]);
-      this->memory_segment = getMemorySegmentKind(splits[1]);
-      this->offset = std::stoi(splits[2]);
+      if (splits[0] == "function") {
+        this->command_type = FUNCTION;
+        this->function_name = splits[1];
+        this->number_of_local_variables = std::stoi(splits[2]);
+      } else if (splits[0] == "call") {
+        this->command_type = CALL;
+        this->function_name = splits[1];
+        this->number_of_args = std::stoi(splits[2]);
+      } else {
+        this->command_type = MEMORY_SEGMENT;
+        this->access_type = getAccessKind(splits[0]);
+        this->memory_segment = getMemorySegmentKind(splits[1]);
+        this->offset = std::stoi(splits[2]);
+      }
+
     } else {
       throw std::invalid_argument("Invalid string for Command");
     }
@@ -151,10 +180,27 @@ public:
   BranchType getBranchType() { return this->branch_type.value(); }
 
   std::string getLabel() { return this->label.value(); }
+
+  std::string getFunctionName() { return this->function_name.value(); }
+
+  int16_t getNumberOfLocalVars() {
+    return this->number_of_local_variables.value();
+  }
+
+  int16_t getNumberOfArgs() { return this->number_of_args.value(); }
 };
 
 class CommandList {
 public:
+  static std::string trim(const std::string &str) {
+    size_t start = str.find_first_not_of(" \t\n\r\f\v");
+    size_t end = str.find_last_not_of(" \t\n\r\f\v");
+    if (start == std::string::npos) {
+      return "";
+    }
+    return str.substr(start, end - start + 1);
+  }
+
   static bool isValidLine(std::string line) {
     if (line.empty()) {
       return false;
@@ -178,7 +224,7 @@ public:
 
     std::string line;
     while (std::getline(input_file, line)) {
-      if (isValidLine(line)) {
+      if (isValidLine(trim(line))) {
         Command command(line);
         command_list.push_back(command);
       }

@@ -21,7 +21,7 @@ enum MemorySegment {
 };
 enum ArithmeticOperation { ADD, SUB, NEG, EQ, GT, LT, AND, OR, NOT };
 enum MemorySegmentAccessType { PUSH, POP };
-enum CommandType { MEMORY_SEGMENT, ARITHMETIC_OPERATION };
+enum CommandType { MEMORY_SEGMENT, ARITHMETIC_OPERATION, RETURN };
 
 class Command {
 private:
