@@ -14,23 +14,6 @@ Most of the chips are visualized in logic gates [here](https://circuitverse.org/
 ## Technologies
  * [The Nand to Tetris Software Suite](https://www.nand2tetris.org/software)
 
-
-## Project structure
-Namespace Tree of the project at depth level 3.
-
-    +---nand2tetris
-    |   +---projects
-    |   |   +---01 Boolean Logic
-    |   |   +---02 Boolean Arithmetic
-    |   |   +---03 Memory
-    |   |   +---04 Machine Language
-    |   |   +---05 Computer Architecture
-    |   |   +---06 Assembler
-    |   |   +---07 Virtual Machine 1 (processing)
-    |   |   +---08 Virtual Machine 2 (control)
-    |   |   +---09 High-Level Language
-    |   |   +---10 Compiler I: Syntax Analysis
-
 ## Roadmap
 - [X]  Boolean Logic
 - [x]  Boolean Arithmetic
@@ -40,7 +23,7 @@ Namespace Tree of the project at depth level 3.
 - [x]  Assembler -> Scala
 - [x]  Virtual Machine I: Processing -> C++
 - [x]  Virtual Machine II: Control -> C++
-- [ ]  High-Level Language
+- [X]  High-Level Language
 - [ ]  Compiler I: Syntax Analysis
 - [ ]  Compiler II: Code generation
 - [ ]  Operating System
