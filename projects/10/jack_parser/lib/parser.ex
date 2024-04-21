@@ -7,7 +7,10 @@ defmodule JackParser do
 
     case File.read(arg) do
       {:ok, content} ->
-        IO.inspect(JackParser.Statement.parse(content))
+        File.open!(Path.basename(arg) <> ".out", [:write], fn file ->
+          output = JackParser.Program.parse(content)
+          IO.inspect(file, output, [])
+        end)
 
       {:error, reason} ->
         IO.puts("Error: #{reason}")
