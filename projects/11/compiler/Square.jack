@@ -1,0 +1,5 @@
+class Square {
+    static int getA, getB, getC, getD;
+
+    function void getArea(){ }
+}
