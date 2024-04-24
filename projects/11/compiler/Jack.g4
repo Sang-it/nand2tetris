@@ -2,15 +2,39 @@ grammar Jack;
 
 class_: 'class' className '{' propertyDeclaration* subRoutineDeclaration* '}' EOF;
 
-propertyDeclaration : propertyKind type varName multiPropertyDeclaration*';';
+propertyDeclaration : propertyKind type varName chainProperty*';';
 
-multiPropertyDeclaration : (',' varName);
-
-subRoutineDeclaration : subRoutineKind returnType subRoutineName '(' ')' subRoutineBody;
+subRoutineDeclaration : subRoutineKind returnType subRoutineName '(' parameterList ')' subRoutineBody;
 
 returnType: 'void' | type;
 
-subRoutineBody : '{' '}';
+parameterList : (type varName chainParameter*)?;
+
+chainParameter : ',' type varName;
+
+subRoutineBody : '{' variableDeclaration* statement* '}';
+
+variableDeclaration : 'var' type varName chainVariable*';';
+
+chainProperty : ',' varName;
+
+chainVariable : ',' varName;
+
+statement : letStatement | returnStatement;
+
+letStatement : 'let' varName '=' expression ';';
+
+returnStatement : 'return' expression? ';';
+
+expression : term chainExpression*;
+
+chainExpression : op term;
+
+term : integerConstant;
+
+integerConstant : INTEGER_CONSTANT;
+
+op : '+' | '-' | '!' | '|' | '&' | '*' | '/' | '<' | '>' | '=';
 
 className : ID;
 
@@ -18,22 +42,19 @@ varName : ID;
 
 subRoutineName : ID;
 
+type: 'int' | 'char' | 'boolean' | ID;
+
 propertyKind : 'static' | 'field';
 
 subRoutineKind : 'constructor' | 'function' | 'method';
 
-type: 'int' | 'char' | 'boolean' | ID;
+INTEGER_CONSTANT : [0-9]+;
 
 ID: [a-zA-Z]+;
 
 WS: [ \t\r\n]+ -> skip;
 /*
 
-parameterList : (TYPE varName (',' TYPE varName)*)?;
-
-subRoutineBody : '{' (varDeclaration)* statements '}';
-
-varDeclaration : 'var' TYPE varName (',' varName)*';';
 
 statements : (statement)*;
 

@@ -11,4 +11,8 @@ CommonTokenStream commonTokenStream = new CommonTokenStream(jackLexer);
 JackParser jackParser = new JackParser(commonTokenStream);
 JackParser.Class_Context classContext = jackParser.class_();
 JackBaseVisitor<object?> visitor = new Visitor();
-visitor.Visit(classContext);
+
+var path = "./Square.vm";
+string output_vm = (string)visitor.Visit(classContext);
+File.WriteAllText(path, output_vm);
+

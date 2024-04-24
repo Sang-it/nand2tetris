@@ -1,5 +1,6 @@
 class Square {
-    static int getA, getB, getC, getD;
-
-    function void getArea(){ }
+    function void getArea(){
+        var int breadth;
+        let breadth = 20 * 10 + 10;
+    }
 }
