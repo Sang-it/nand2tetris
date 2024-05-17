@@ -54,7 +54,7 @@ expression : term chainExpression*;
 
 chainExpression : op term;
 
-term : integerConstant;
+term : integerConstant | subRoutineCall;
 
 integerConstant : INTEGER_CONSTANT;
 
