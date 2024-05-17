@@ -26,7 +26,9 @@ statement : letStatement
             | whileStatement
             | doStatement;
 
-letStatement : 'let' varName '=' expression ';';
+letStatement : 'let' varName chainArrayAccess? '=' expression ';';
+
+chainArrayAccess : '[' expression ']';
 
 returnStatement : 'return' expression? ';';
 
@@ -59,7 +61,8 @@ term : integerConstant
             | keywordConstant
             | unaryTerm
             | varName
-            | parenthesisExpression;
+            | parenthesisExpression
+            | arrayAccess;
 
 unaryTerm : unaryOp term;
 
@@ -68,6 +71,8 @@ integerConstant : INTEGER_CONSTANT;
 keywordConstant : KEYWORD_CONSTANT;
 
 parenthesisExpression : '(' expression ')';
+
+arrayAccess : varName '[' expression ']';
 
 op : '+' | '-' | '!' | '|' | '&' | '*' | '/' | '<' | '>' | '=';
 

@@ -152,13 +152,29 @@ namespace Compiler.Visitor
         public override object? VisitLetStatement(JackParser.LetStatementContext context) {
             string output = "";
             var name = context.varName().GetText();
-            output += Visit(context.expression());
             Entry? entry = getEntry(name);
             if (entry.HasValue) {
-                output += $"pop {entry.Value.Kind} {entry.Value.Offset}\n";
+                if (context.chainArrayAccess() != null) {
+                    output += Visit(context.chainArrayAccess());
+                    output += $"push {entry.Value.Kind} {entry.Value.Offset}\n";
+                    output += "add\n";
+                    output += Visit(context.expression());
+                    output += "pop temp 0\n";
+                    output += "pop pointer 1\n";
+                    output += "pop temp 0\n";
+                    output += "pop that 0\n";
+                } else {
+                    output += $"pop {entry.Value.Kind} {entry.Value.Offset}\n";
+                }
             } else {
                 throw new Exception($"Variable {name} not found");
             }
+            return output;
+        }
+
+        public override object? VisitChainArrayAccess(JackParser.ChainArrayAccessContext context) {
+            string output = "";
+            output += Visit(context.expression());
             return output;
         }
 
@@ -221,6 +237,22 @@ namespace Compiler.Visitor
 
         public override object? VisitParenthesisExpression(JackParser.ParenthesisExpressionContext context) {
             return Visit(context.expression());
+        }
+
+        public override object? VisitArrayAccess(JackParser.ArrayAccessContext context) {
+            string output = "";
+            var name = context.varName().GetText();
+            output += Visit(context.expression());
+            Entry? entry = getEntry(name);
+            if (entry.HasValue) {
+                output += $"push {entry.Value.Kind} {entry.Value.Offset}\n";
+                output += "add\n";
+                output += "pop pointer 1\n";
+                output += "push that 0\n";
+            } else {
+                throw new Exception($"Variable {name} not found");
+            }
+            return output;
         }
 
         private string opCodeToString(string op){
