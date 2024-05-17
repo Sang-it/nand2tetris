@@ -305,7 +305,7 @@ namespace Compiler.Visitor
                 output +=output_;
                 count += count_;
             }
-            output += "call " + className + "." + name + " " + count + "\n";
+            output += "call " + className_ + "." + name + " " + count + "\n";
             return output;
         }
 
