@@ -193,6 +193,25 @@ namespace Compiler.Visitor
             }
         }
 
+        private string unaryOpCodeToString(string op){
+            switch(op) {
+                case "-":
+                    return "neg\n";
+                case "~":
+                    return "not\n";
+                default:
+                    return "unreachable!()";
+            }
+        }
+
+        public override object? VisitUnaryTerm(JackParser.UnaryTermContext context) {
+            string output = "";
+            output += Visit(context.term());
+            string op = context.unaryOp().GetText();
+            output += unaryOpCodeToString(op);
+            return output;
+        }
+
         private string opCodeToString(string op){
             switch(op) {
                 case "+":

@@ -54,13 +54,17 @@ expression : term chainExpression*;
 
 chainExpression : op term;
 
-term : integerConstant | subRoutineCall | keywordConstant;
+term : integerConstant | subRoutineCall | keywordConstant | unaryTerm;
+
+unaryTerm : unaryOp term;
 
 integerConstant : INTEGER_CONSTANT;
 
 keywordConstant : KEYWORD_CONSTANT;
 
 op : '+' | '-' | '!' | '|' | '&' | '*' | '/' | '<' | '>' | '=';
+
+unaryOp : '-' | '~';
 
 className : ID;
 
