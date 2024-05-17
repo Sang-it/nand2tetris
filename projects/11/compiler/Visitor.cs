@@ -325,6 +325,17 @@ namespace Compiler.Visitor
             output += Visit(context.expression());
             return output;
         }
+
+        public override object? VisitReturnStatement(JackParser.ReturnStatementContext context) {
+            string output = "";
+            if (context.expression() != null) {
+                output += Visit(context.expression());
+            } else {
+                output += "push constant 0\n";
+            }
+            output += "return\n";
+            return output;
+        }
     }
 
 
