@@ -20,7 +20,11 @@ chainProperty : ',' varName;
 
 chainVariable : ',' varName;
 
-statement : letStatement | returnStatement | ifStatement;
+statement : letStatement
+            | returnStatement
+            | ifStatement
+            | whileStatement
+            | doStatement;
 
 letStatement : 'let' varName '=' expression ';';
 
@@ -28,9 +32,23 @@ returnStatement : 'return' expression? ';';
 
 ifStatement : 'if' '(' expression ')' ifClause elseClause?;
 
+whileStatement : 'while' '(' expression ')' '{' statement* '}';
+
+doStatement : 'do' subRoutineCall ';';
+
 ifClause : '{' statement* '}';
 
 elseClause : 'else' '{' statement* '}';
+
+subRoutineCall : functionCall | methodCall;
+
+functionCall : subRoutineName '(' expressionList ')';
+
+methodCall : (className | varName) '.' subRoutineName '(' expressionList ')';
+
+expressionList : (expression chainExpressionList*)?;
+
+chainExpressionList : ',' expression;
 
 expression : term chainExpression*;
 
@@ -61,20 +79,9 @@ ID: [a-zA-Z]+;
 WS: [ \t\r\n]+ -> skip;
 /*
 
-statements : (statement)*;
+STRING_CONSTANT : '"' .*? '"';
 
-statement
-    : letStatement
-    | ifStatement
-    | whileStatement
-    | doStatement
-    | returnStatement
-    ;
-
-letStatement : 'let' varName ('[' expression ']')? '=' expression ';';
-
-
-whileStatement : 'while' '(' expression ')' '{' statements '}';
+KEYWORD_CONSTANT : 'true' | 'false' | 'null' | 'this';
 
 doStatement : 'do' '(' expressionList ')' ';';
 
@@ -88,20 +95,6 @@ term : INTEGER_CONSTANT | STRING_CONSTANT | KEYWORD_CONSTANT | varName | varName
 
 subRoutineCall : ID '(' expressionList ')' | (ID '.') ID '(' expressionList ')';
 
-op : '+' | '-' | '*' | '/' | '&' | '|' | '<' | '>' | '=';
-
 unaryOp : '-' | '~';
-
-varName : ID;
-
-subRoutineName : ID;
-
-KEYWORD_CONSTANT : 'true' | 'false' | 'null' | 'this';
-
-INTEGER_CONSTANT : [0-9]+;
-
-STRING_CONSTANT : '"' .*? '"';
-
-SUB_ROUTINE_KIND : 'constructor' | 'function' | 'method';
 
 */
