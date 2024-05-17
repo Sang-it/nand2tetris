@@ -54,9 +54,11 @@ expression : term chainExpression*;
 
 chainExpression : op term;
 
-term : integerConstant | subRoutineCall;
+term : integerConstant | subRoutineCall | keywordConstant;
 
 integerConstant : INTEGER_CONSTANT;
+
+keywordConstant : KEYWORD_CONSTANT;
 
 op : '+' | '-' | '!' | '|' | '&' | '*' | '/' | '<' | '>' | '=';
 
@@ -72,6 +74,8 @@ propertyKind : 'static' | 'field';
 
 subRoutineKind : 'constructor' | 'function' | 'method';
 
+KEYWORD_CONSTANT : 'true' | 'false' | 'null' | 'this';
+
 INTEGER_CONSTANT : [0-9]+;
 
 ID: [a-zA-Z]+;
@@ -79,9 +83,6 @@ ID: [a-zA-Z]+;
 WS: [ \t\r\n]+ -> skip;
 /*
 
-STRING_CONSTANT : '"' .*? '"';
-
-KEYWORD_CONSTANT : 'true' | 'false' | 'null' | 'this';
 
 doStatement : 'do' '(' expressionList ')' ';';
 

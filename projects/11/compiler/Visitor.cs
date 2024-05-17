@@ -179,6 +179,20 @@ namespace Compiler.Visitor
             return $"push constant {context.GetText()}\n";
         }
 
+        public override object? VisitKeywordConstant(JackParser.KeywordConstantContext context) {
+            switch(context.GetText()) {
+                case "false":
+                case "null":
+                    return "push constant 0\n";
+                case "true":
+                    return "push constant 1\n";
+                case "this":
+                    return "push pointer 0\n";
+                default:
+                    return "unreachable!()";
+            }
+        }
+
         private string opCodeToString(string op){
             switch(op) {
                 case "+":
