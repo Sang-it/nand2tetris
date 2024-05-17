@@ -54,13 +54,20 @@ expression : term chainExpression*;
 
 chainExpression : op term;
 
-term : integerConstant | subRoutineCall | keywordConstant | unaryTerm | varName;
+term : integerConstant
+            | subRoutineCall
+            | keywordConstant
+            | unaryTerm
+            | varName
+            | parenthesisExpression;
 
 unaryTerm : unaryOp term;
 
 integerConstant : INTEGER_CONSTANT;
 
 keywordConstant : KEYWORD_CONSTANT;
+
+parenthesisExpression : '(' expression ')';
 
 op : '+' | '-' | '!' | '|' | '&' | '*' | '/' | '<' | '>' | '=';
 

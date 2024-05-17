@@ -219,6 +219,10 @@ namespace Compiler.Visitor
             }
         }
 
+        public override object? VisitParenthesisExpression(JackParser.ParenthesisExpressionContext context) {
+            return Visit(context.expression());
+        }
+
         private string opCodeToString(string op){
             switch(op) {
                 case "+":
