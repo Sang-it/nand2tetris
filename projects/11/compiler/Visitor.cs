@@ -140,10 +140,6 @@ namespace Compiler.Visitor
             return context.varName().GetText();
         }
 
-        public override object? VisitStatement(JackParser.StatementContext context) {
-            return VisitChildren(context);
-        }
-
         private Entry? getEntry(string name){
             if (CurrFunctionSymbolTable.ContainsKey(name)) {
                 return CurrFunctionSymbolTable[name];
@@ -266,12 +262,16 @@ namespace Compiler.Visitor
             output += $"goto FALSE_{count}\n";;
             output += $"label TRUE_{count}\n";
 
-            output += Visit(context.ifClause());
+            if (context.elseClause() != null){
+                output += Visit(context.ifClause());
+            }
 
             output += $"goto END_{count}\n";
             output += $"label FALSE_{count}\n";
 
-            output += Visit(context.elseClause());
+            if (context.elseClause() != null){
+                output += Visit(context.elseClause());
+            }
 
             output += $"label END_{count}\n";
             return output;
@@ -313,10 +313,6 @@ namespace Compiler.Visitor
             output += Visit(context.subRoutineCall());
             output += "pop temp 0\n";
             return output;
-        }
-
-        public override object? VisitSubRoutineCall(JackParser.SubRoutineCallContext context) {
-            return VisitChildren(context);
         }
 
         public override object? VisitFunctionCall(JackParser.FunctionCallContext context) {
