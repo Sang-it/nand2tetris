@@ -212,6 +212,17 @@ namespace Compiler.Visitor
             return output;
         }
 
+        public override object? VisitVarName(JackParser.VarNameContext context) {
+            string name = context.GetText();
+            Entry? entry = getEntry(name);
+
+            if (entry.HasValue) {
+                return $"push {entry.Value.Kind} {entry.Value.Offset}\n";
+            } else {
+                throw new Exception($"Variable {name} not found");
+            }
+        }
+
         private string opCodeToString(string op){
             switch(op) {
                 case "+":

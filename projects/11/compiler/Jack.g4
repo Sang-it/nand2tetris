@@ -54,7 +54,7 @@ expression : term chainExpression*;
 
 chainExpression : op term;
 
-term : integerConstant | subRoutineCall | keywordConstant | unaryTerm;
+term : integerConstant | subRoutineCall | keywordConstant | unaryTerm | varName;
 
 unaryTerm : unaryOp term;
 
