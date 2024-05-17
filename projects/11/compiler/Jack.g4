@@ -20,11 +20,17 @@ chainProperty : ',' varName;
 
 chainVariable : ',' varName;
 
-statement : letStatement | returnStatement;
+statement : letStatement | returnStatement | ifStatement;
 
 letStatement : 'let' varName '=' expression ';';
 
 returnStatement : 'return' expression? ';';
+
+ifStatement : 'if' '(' expression ')' ifClause elseClause?;
+
+ifClause : '{' statement* '}';
+
+elseClause : 'else' '{' statement* '}';
 
 expression : term chainExpression*;
 
@@ -55,7 +61,6 @@ ID: [a-zA-Z]+;
 WS: [ \t\r\n]+ -> skip;
 /*
 
-
 statements : (statement)*;
 
 statement
@@ -68,7 +73,6 @@ statement
 
 letStatement : 'let' varName ('[' expression ']')? '=' expression ';';
 
-ifStatement : 'if' '(' expression ')' '{' statements '}' ('else' '{' statements '}')?;
 
 whileStatement : 'while' '(' expression ')' '{' statements '}';
 

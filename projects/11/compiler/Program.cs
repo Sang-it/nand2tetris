@@ -15,4 +15,3 @@ JackBaseVisitor<object?> visitor = new Visitor();
 var path = "./Square.vm";
 string output_vm = (string)visitor.Visit(classContext);
 File.WriteAllText(path, output_vm);
-

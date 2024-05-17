@@ -11,6 +11,10 @@ namespace Compiler.Visitor
         private int static_offset = 0;
         private int local_offset = 0;
         private int argument_offset = 0;
+
+        private int if_count = 0;
+        private int while_count = 0;
+
         public Dictionary<string, Entry> ClassSymbolTable = new Dictionary<string, Entry>();
         public Dictionary<string, Entry> CurrFunctionSymbolTable = new Dictionary<string, Entry>();
 
@@ -191,6 +195,41 @@ namespace Compiler.Visitor
             output += Visit(context.term());
             string op = context.op().GetText();
             output += opCodeToString(op);
+            return output;
+        }
+
+        public override object? VisitIfStatement(JackParser.IfStatementContext context) {
+            string output = "";
+            int count = if_count++;
+            output += Visit(context.expression());
+            output += $"if-goto TRUE_{count}\n";
+            output += $"goto FALSE_{count}\n";;
+            output += $"label TRUE_{count}\n";
+
+            output += Visit(context.ifClause());
+
+            output += $"goto END_{count}\n";
+            output += $"label FALSE_{count}\n";
+
+            output += Visit(context.elseClause());
+
+            output += $"label END_{count}\n";
+            return output;
+        }
+
+        public override object? VisitIfClause(JackParser.IfClauseContext context) {
+            string output = "";
+            foreach (var statement in context.statement()){
+                output += Visit(statement);
+            }
+            return output;
+        }
+
+        public override object? VisitElseClause(JackParser.ElseClauseContext context) {
+            string output = "";
+            foreach (var statement in context.statement()){
+                output += Visit(statement);
+            }
             return output;
         }
     }
