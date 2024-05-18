@@ -25,5 +25,5 @@ Most of the chips are visualized in logic gates [here](https://circuitverse.org/
 - [x]  Virtual Machine II: Control   -> C++
 - [X]  High-Level Language
 - [x]  Compiler I: Syntax Analysis   -> Elixir
-- [ ]  Compiler II: Code generation  -> C#(Antlr)
+- [x]  Compiler II: Code generation  -> C#(Antlr)
 - [ ]  Operating System
