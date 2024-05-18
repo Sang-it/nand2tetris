@@ -104,3 +104,7 @@ STRING_CONSTANT : '"' (~["\\\r\n])* '"';
 ID: [a-zA-Z_][a-zA-Z0-9_]*;
 
 WS: [ \t\r\n]+ -> skip;
+
+LINE_COMMENT : '//' ~[\r\n]* -> skip ;
+
+MULTILINE_COMMENT : '/**' .*? '*/' -> skip ;
