@@ -1,4 +1,4 @@
-namespace Compiler.Visitor
+namespace Compiler
 {
     using System.Text;
     using Antlr4.Runtime;
@@ -445,4 +445,3 @@ namespace Compiler.Visitor
         }
     }
 }
-

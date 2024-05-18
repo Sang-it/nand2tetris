@@ -1,17 +1,56 @@
-﻿using Antlr4.Runtime;
-using Compiler.Visitor;
+﻿namespace Compiler
+{
+    using Antlr4.Runtime;
 
-var filename = "Square.jack";
+    class Core {
+        static void Main(string[] args)
+        {
+            if (args.Length == 0)
+            {
+                Console.WriteLine("No file or folder provided.");
+                return;
+            }
+            string path = args[0];
+            if (File.Exists(path))
+            {
+                CompileFile(path);
+            }
+            else if (Directory.Exists(path))
+            {
+                CompileDirectory(path);
+            }
+            else
+            {
+                Console.WriteLine($"The path '{path}' is invalid.");
+            }
+        }
 
-string input = File.ReadAllText(filename);
+        static void CompileFile(string path)
+        {
+            string input = File.ReadAllText(path);
+            string vm_path = Path.ChangeExtension(path, ".vm");
 
-AntlrInputStream inputStream = new AntlrInputStream(input);
-JackLexer jackLexer = new JackLexer(inputStream);
-CommonTokenStream commonTokenStream = new CommonTokenStream(jackLexer);
-JackParser jackParser = new JackParser(commonTokenStream);
-JackParser.Class_Context classContext = jackParser.class_();
-JackBaseVisitor<object?> visitor = new Visitor();
+            AntlrInputStream inputStream = new AntlrInputStream(input);
+            JackLexer jackLexer = new JackLexer(inputStream);
+            CommonTokenStream commonTokenStream = new CommonTokenStream(jackLexer);
+            JackParser jackParser = new JackParser(commonTokenStream);
+            JackParser.Class_Context classContext = jackParser.class_();
+            JackBaseVisitor<object?> visitor = new Visitor();
+            string output_vm = (string)visitor.Visit(classContext);
 
-var path = "./Square.vm";
-string output_vm = (string)visitor.Visit(classContext);
-File.WriteAllText(path, output_vm);
+            File.WriteAllText(vm_path, output_vm);
+        }
+
+        static void CompileDirectory(string path)
+        {
+            string[] files = Directory.GetFiles(path);
+            foreach (string file in files)
+            {
+                if (Path.GetExtension(file) == ".jack")
+                {
+                    CompileFile(file);
+                }
+            }
+        }
+    }
+}
