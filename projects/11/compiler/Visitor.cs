@@ -5,21 +5,20 @@ namespace Compiler
 
     public class Visitor : JackBaseVisitor<object?>
     {
-        public string vm_output;
         private string className = "";
-        private int field_offset = 0;
-        private int static_offset = 0;
-        private int local_offset = 0;
-        private int argument_offset = 0;
-
-        private int if_count = 0;
-        private int while_count = 0;
-
+        private int fieldOffset = 0;
+        private int staticOffset = 0;
+        private int localOffset = 0;
+        private int argumentOffset = 0;
+        private int ifCount = 0;
+        private int whileCount = 0;
         public Dictionary<string, Entry> ClassSymbolTable = new Dictionary<string, Entry>();
         public Dictionary<string, Entry> CurrFunctionSymbolTable = new Dictionary<string, Entry>();
 
         public override object? VisitClass_(JackParser.Class_Context context)
         {
+            var vmOutput = new StringBuilder();
+
             var className_ = context.className().GetText();
             className = className_;
 
@@ -28,18 +27,18 @@ namespace Compiler
             }
 
             foreach (var declaration in context.subRoutineDeclaration()) {
-                Visit(declaration);
+                vmOutput.Append(Visit(declaration));
             }
 
-            return vm_output;
+            return vmOutput.ToString();
         }
 
         private void updateClassSymbolTable(string name, string type,string kind){
             if (kind == "static") {
-                ClassSymbolTable[name] = new Entry(type, "static", static_offset++);
+                ClassSymbolTable[name] = new Entry(type, "static", staticOffset++);
                 return;
             }
-            ClassSymbolTable[name] = new Entry(type, "this", field_offset++);
+            ClassSymbolTable[name] = new Entry(type, "this", fieldOffset++);
         }
 
         public override object? VisitPropertyDeclaration(JackParser.PropertyDeclarationContext context) {
@@ -63,11 +62,12 @@ namespace Compiler
 
         private void ResetCurrFunction() {
             CurrFunctionSymbolTable.Clear();
-            argument_offset = 0;
-            local_offset = 0;
+            argumentOffset = 0;
+            localOffset = 0;
         }
 
         public override object? VisitSubRoutineDeclaration(JackParser.SubRoutineDeclarationContext context) {
+            var output = new StringBuilder();
             var kind = context.subRoutineKind().GetText();
             var type = context.returnType().GetText();
             var name = context.subRoutineName().GetText();
@@ -76,20 +76,19 @@ namespace Compiler
                 Visit(context.parameterList());
             }
             string bodyOutput = (string)Visit(context.subRoutineBody());
-
-            vm_output += $"function {className}.{name} {local_offset}\n";
-            vm_output += bodyOutput;
+            output.AppendLine($"function {className}.{name} {localOffset}");
+            output.Append(bodyOutput);
 
             ResetCurrFunction();
-            return null;
+            return output.ToString();
         }
 
         private void updateCurrFunctionSymbolTable(string name, string type, string kind){
             if(kind == "argument") {
-                CurrFunctionSymbolTable[name] = new Entry(type, kind, argument_offset++);
+                CurrFunctionSymbolTable[name] = new Entry(type, kind, argumentOffset++);
                 return;
             }
-            CurrFunctionSymbolTable[name] = new Entry(type, kind, local_offset++);
+            CurrFunctionSymbolTable[name] = new Entry(type, kind, localOffset++);
         }
 
         public override object? VisitParameterList(JackParser.ParameterListContext context) {
@@ -111,16 +110,16 @@ namespace Compiler
 
 
         public override object? VisitSubRoutineBody(JackParser.SubRoutineBodyContext context) {
-            string output = "";
+            var output = new StringBuilder();
 
             foreach (var declaration in context.variableDeclaration()){
                 Visit(declaration);
             }
             foreach (var statement in context.statement()){
-                output += (string)Visit(statement);
+                output.Append(Visit(statement));
             }
 
-            return output;
+            return output.ToString();
         }
 
         public override object? VisitVariableDeclaration(JackParser.VariableDeclarationContext context) {
@@ -140,7 +139,7 @@ namespace Compiler
             return context.varName().GetText();
         }
 
-        private Entry? getEntry(string name){
+        private Entry? GetEntry(string name){
             if (CurrFunctionSymbolTable.ContainsKey(name)) {
                 return CurrFunctionSymbolTable[name];
             } else if (ClassSymbolTable.ContainsKey(name)) {
@@ -150,88 +149,87 @@ namespace Compiler
         }
 
         public override object? VisitLetStatement(JackParser.LetStatementContext context) {
-            string output = "";
+            var output = new StringBuilder();
             var name = context.varName().GetText();
-            Entry? entry = getEntry(name);
+            Entry? entry = GetEntry(name);
             if (entry.HasValue) {
                 if (context.chainArrayAccess() != null) {
-                    output += Visit(context.chainArrayAccess());
-                    output += $"push {entry.Value.Kind} {entry.Value.Offset}\n";
-                    output += "add\n";
-                    output += Visit(context.expression());
-                    output += "pop temp 0\n";
-                    output += "pop pointer 1\n";
-                    output += "push temp 0\n";
-                    output += "pop that 0\n";
+                    output.Append(Visit(context.chainArrayAccess()));
+                    output.AppendLine($"push {entry.Value.Kind} {entry.Value.Offset}");
+                    output.AppendLine("add");
+                    output.AppendLine((string)Visit(context.expression()));
+                    output.AppendLine("pop temp 0");
+                    output.AppendLine("pop pointer 1");
+                    output.AppendLine("push temp 0");
+                    output.AppendLine("pop that 0");
                 } else {
-                    output += Visit(context.expression());
-                    output += $"pop {entry.Value.Kind} {entry.Value.Offset}\n";
+                    output.Append(Visit(context.expression()));
+                    output.AppendLine($"pop {entry.Value.Kind} {entry.Value.Offset}");
                 }
             } else {
                 throw new Exception($"Variable {name} not found");
             }
-            return output;
+            return output.ToString();
         }
 
         public override object? VisitChainArrayAccess(JackParser.ChainArrayAccessContext context) {
-            string output = "";
-            output += Visit(context.expression());
-            return output;
+            return Visit(context.expression());
         }
 
-        public override object? VisitExpression(JackParser.ExpressionContext context) {
-            string output = "";
-            output += Visit(context.term());
-            foreach (var expression in context.chainExpression()){
-                output += Visit(expression);
-            };
-            return output;
+        public override object? VisitExpression(JackParser.ExpressionContext context)
+        {
+            var output = new StringBuilder();
+            output.Append(Visit(context.term()));
+            foreach (var expression in context.chainExpression())
+            {
+                output.Append(Visit(expression));
+            }
+            return output.ToString();
         }
 
         public override object? VisitIntegerConstant(JackParser.IntegerConstantContext context) {
             return $"push constant {context.GetText()}\n";
         }
 
-        public override object? VisitKeywordConstant(JackParser.KeywordConstantContext context) {
-            switch(context.GetText()) {
-                case "false":
-                case "null":
-                    return "push constant 0\n";
-                case "true":
-                    return "push constant 1\n";
-                case "this":
-                    return "push pointer 0\n";
-                default:
-                    return "unreachable!()";
-            }
+        public override object? VisitKeywordConstant(JackParser.KeywordConstantContext context)
+        {
+            return context.GetText() switch
+            {
+                "false" => "push constant 0\n",
+                    "null" => "push constant 0\n",
+                    "true" => "push constant 1\n",
+                    "this" => "push pointer 0\n",
+                    _ => throw new Exception("Unexpected keyword constant")
+            };
         }
 
-        private string unaryOpCodeToString(string op){
-            switch(op) {
-                case "-":
-                    return "neg\n";
-                case "~":
-                    return "not\n";
-                default:
-                    return "unreachable!()";
-            }
+        private string UnaryOpCodeToString(string op){
+            return op switch
+            {
+                "-" => "neg\n",
+                    "~" => "not\n",
+                    _ => throw new Exception("Unexpected unary operator")
+            };
         }
 
         public override object? VisitUnaryTerm(JackParser.UnaryTermContext context) {
-            string output = "";
-            output += Visit(context.term());
-            string op = context.unaryOp().GetText();
-            output += unaryOpCodeToString(op);
-            return output;
+            var output = new StringBuilder();
+            output.Append(Visit(context.term()));
+            var op = context.unaryOp().GetText();
+            output.Append(UnaryOpCodeToString(op));
+            return output.ToString();
         }
 
         public override object? VisitVarName(JackParser.VarNameContext context) {
-            string name = context.GetText();
-            Entry? entry = getEntry(name);
+            var name = context.GetText();
+            var entry = GetEntry(name);
 
-            if (entry.HasValue) {
+            if (entry.HasValue)
+            {
                 return $"push {entry.Value.Kind} {entry.Value.Offset}\n";
-            } else {
+            }
+            else
+            {
                 throw new Exception($"Variable {name} not found");
             }
         }
@@ -240,193 +238,222 @@ namespace Compiler
             return Visit(context.expression());
         }
 
-        public override object? VisitArrayAccess(JackParser.ArrayAccessContext context) {
-            string output = "";
+        public override object? VisitArrayAccess(JackParser.ArrayAccessContext context)
+        {
+            var output = new StringBuilder();
             var name = context.varName().GetText();
-            output += Visit(context.expression());
-            Entry? entry = getEntry(name);
-            if (entry.HasValue) {
-                output += $"push {entry.Value.Kind} {entry.Value.Offset}\n";
-                output += "add\n";
-                output += "pop pointer 1\n";
-                output += "push that 0\n";
-            } else {
+            output.Append(Visit(context.expression()));
+            var entry = GetEntry(name);
+
+            if (entry.HasValue)
+            {
+                output.AppendLine($"push {entry.Value.Kind} {entry.Value.Offset}");
+                output.AppendLine("add");
+                output.AppendLine("pop pointer 1");
+                output.AppendLine("push that 0");
+            }
+            else
+            {
                 throw new Exception($"Variable {name} not found");
             }
-            return output;
+
+            return output.ToString();
         }
 
-        public override object? VisitStringConstant(JackParser.StringConstantContext context) {
-            string str = context.GetText();
-            str = str.Substring(1, str.Length - 2);
-            string output = $"push constant {str.Length}\n";
-            output += "call String.new 1\n";
-            foreach (char c in str) {
-                output += $"push constant {(int)c}\n";
-                output += "call String.appendChar 2\n";
+        public override object? VisitStringConstant(JackParser.StringConstantContext context)
+        {
+            var output = new StringBuilder();
+            var str = context.GetText().Trim('"');
+            output.AppendLine($"push constant {str.Length}");
+            output.AppendLine("call String.new 1");
+
+            foreach (var c in str)
+            {
+                output.AppendLine($"push constant {(int)c}");
+                output.AppendLine("call String.appendChar 2");
             }
-            return output;
+
+            return output.ToString();
         }
 
-        private string opCodeToString(string op){
-            switch(op) {
-                case "+":
-                    return "add\n";
-                case "-":
-                    return "sub\n";
-                case "!":
-                    return "neg\n";
-                case "|":
-                    return "or\n";
-                case "&":
-                    return "and\n";
-                case "=":
-                    return "eq\n";
-                case ">":
-                    return "gt\n";
-                case "<":
-                    return "lt\n";
-                case "*":
-                    return "call Math.multiply 2\n";
-                case "/":
-                    return "call Math.divide 2\n";
-                default:
-                    return "unreachable!()";
-            }
+        private string OpCodeToString(string op){
+            return op switch
+            {
+                "+" => "add\n",
+                    "-" => "sub\n",
+                    "&" => "and\n",
+                    "|" => "or\n",
+                    "<" => "lt\n",
+                    ">" => "gt\n",
+                    "=" => "eq\n",
+                    "*" => "call Math.multiply 2\n",
+                    "/" => "call Math.divide 2\n",
+                    _ => throw new Exception("Unexpected operator")
+            };
         }
 
         public override object? VisitChainExpression(JackParser.ChainExpressionContext context) {
-            string output = "";
-            output += Visit(context.term());
+            var output = new StringBuilder();
+            output.Append(Visit(context.term()));
             string op = context.op().GetText();
-            output += opCodeToString(op);
-            return output;
+            output.Append(OpCodeToString(op));
+            return output.ToString();
         }
 
         public override object? VisitIfStatement(JackParser.IfStatementContext context) {
-            string output = "";
-            int count = if_count++;
-            output += Visit(context.expression());
-            output += $"if-goto TRUE_{count}\n";
-            output += $"goto FALSE_{count}\n";;
-            output += $"label TRUE_{count}\n";
+            var output = new StringBuilder();
+            int count = ifCount++;
+            output.Append(Visit(context.expression()));
+            output.AppendLine($"if-goto TRUE_{count}");
+            output.AppendLine($"goto FALSE_{count}");
+            output.AppendLine($"label TRUE_{count}");
 
-            if (context.elseClause() != null){
-                output += Visit(context.ifClause());
+            if (context.elseClause() != null)
+            {
+                output.Append(Visit(context.ifClause()));
             }
 
-            output += $"goto END_{count}\n";
-            output += $"label FALSE_{count}\n";
+            output.AppendLine($"goto END_{count}");
+            output.AppendLine($"label FALSE_{count}");
 
-            if (context.elseClause() != null){
-                output += Visit(context.elseClause());
+            if (context.elseClause() != null)
+            {
+                output.Append(Visit(context.elseClause()));
             }
 
-            output += $"label END_{count}\n";
-            return output;
+            output.AppendLine($"label END_{count}");
+            return output.ToString();
         }
 
         public override object? VisitIfClause(JackParser.IfClauseContext context) {
-            string output = "";
-            foreach (var statement in context.statement()){
-                output += Visit(statement);
+            var output = new StringBuilder();
+            foreach (var statement in context.statement())
+            {
+                output.Append(Visit(statement));
             }
-            return output;
+            return output.ToString();
         }
 
         public override object? VisitElseClause(JackParser.ElseClauseContext context) {
-            string output = "";
-            foreach (var statement in context.statement()){
-                output += Visit(statement);
+            var output = new StringBuilder();
+            foreach (var statement in context.statement())
+            {
+                output.Append(Visit(statement));
             }
-            return output;
+            return output.ToString();
         }
 
-        public override object? VisitWhileStatement(JackParser.WhileStatementContext context) {
-            string output = "";
-            int count = while_count++;
-            output += $"label WHILE_START_{count}\n";
-            output += Visit(context.expression());
-            output += $"not\n";
-            output += $"if-goto WHILE_END_{count}\n";
-            foreach (var statement in context.statement()){
-                output += Visit(statement);
+        public override object? VisitWhileStatement(JackParser.WhileStatementContext context)
+        {
+            StringBuilder output = new StringBuilder();
+            int count = whileCount++;
+            output.AppendLine($"label WHILE_START_{count}");
+            output.Append(Visit(context.expression()));
+            output.AppendLine("not");
+            output.AppendLine($"if-goto WHILE_END_{count}");
+
+            foreach (var statement in context.statement())
+            {
+                output.Append(Visit(statement));
             }
-            output += $"goto WHILE_START_{count}\n";
-            output += $"label WHILE_END_{count}\n";
-            return output;
+
+            output.AppendLine($"goto WHILE_START_{count}");
+            output.AppendLine($"label WHILE_END_{count}");
+
+            return output.ToString();
         }
 
-        public override object? VisitDoStatement(JackParser.DoStatementContext context) {
-            string output = "";
-            output += Visit(context.subRoutineCall());
-            output += "pop temp 0\n";
-            return output;
+        public override object? VisitDoStatement(JackParser.DoStatementContext context)
+        {
+            var output = new StringBuilder();
+            output.Append(Visit(context.subRoutineCall()));
+            output.AppendLine("pop temp 0");
+            return output.ToString();
         }
 
-        public override object? VisitFunctionCall(JackParser.FunctionCallContext context) {
-            string output = "";
-            output += "push pointer 0\n";
+        public override object? VisitFunctionCall(JackParser.FunctionCallContext context)
+        {
+            var output = new StringBuilder();
+            output.AppendLine("push pointer 0");
             int count = 1;
-            if (!string.IsNullOrEmpty(context.expressionList().GetText())) {
-                var (output_, count_) = ((string,int))Visit(context.expressionList());
-                output +=output_;
-                count += count_;
+
+            if (!string.IsNullOrEmpty(context.expressionList().GetText()))
+            {
+                var (expressionOutput, expressionCount) = ((string, int)) Visit(context.expressionList());
+                output.Append(expressionOutput);
+                count += expressionCount;
             }
+
             string name = context.subRoutineName().GetText();
-            output += "call " + className + "." + name + " " + count + "\n";
-            return output;
+            output.AppendLine($"call {className}.{name} {count}");
+            return output.ToString();
         }
 
-        public override object? VisitMethodCall(JackParser.MethodCallContext context) {
-            string output = "";
+        public override object? VisitMethodCall(JackParser.MethodCallContext context)
+        {
+            StringBuilder output = new StringBuilder();
             string name = context.subRoutineName().GetText();
             string className_ = context.className().GetText();
 
-            Entry? entry = getEntry(className_);
+            Entry? entry = GetEntry(className_);
             int count = 0;
-            if (entry.HasValue) {
-                output += $"push {entry.Value.Kind} {entry.Value.Offset}\n";
+
+            if (entry.HasValue)
+            {
+                output.AppendLine($"push {entry.Value.Kind} {entry.Value.Offset}");
                 count = 1;
             }
-            if (!string.IsNullOrEmpty(context.expressionList().GetText())) {
-                var (output_, count_) = ((string,int))Visit(context.expressionList());
-                output +=output_;
-                count += count_;
+
+            if (!string.IsNullOrEmpty(context.expressionList().GetText()))
+            {
+                var (expressionOutput, expressionCount) = ((string, int)) Visit(context.expressionList());
+                output.Append(expressionOutput);
+                count += expressionCount;
             }
-            output += "call " + className_ + "." + name + " " + count + "\n";
-            return output;
+
+            output.AppendLine($"call {className_}.{name} {count}");
+            return output.ToString();
         }
 
-        public override object? VisitExpressionList(JackParser.ExpressionListContext context) {
-            string output = "";
+        public override object? VisitExpressionList(JackParser.ExpressionListContext context)
+        {
+            StringBuilder output = new StringBuilder();
             int count = 1;
-            output += Visit(context.expression());
-            foreach (var expression in context.chainExpressionList()){
-                output += Visit(expression);
+            output.Append(Visit(context.expression()));
+
+            foreach (var expression in context.chainExpressionList())
+            {
+                output.Append(Visit(expression));
                 count++;
             }
-            return (output, count);
+
+            return (output.ToString(), count);
         }
 
-        public override object? VisitChainExpressionList(JackParser.ChainExpressionListContext context) {
-            string output = "";
-            output += Visit(context.expression());
-            return output;
+        public override object? VisitChainExpressionList(JackParser.ChainExpressionListContext context)
+        {
+            StringBuilder output = new StringBuilder();
+            output.Append(Visit(context.expression()));
+            return output.ToString();
         }
 
-        public override object? VisitReturnStatement(JackParser.ReturnStatementContext context) {
-            string output = "";
-            if (context.expression() != null) {
-                output += Visit(context.expression());
-            } else {
-                output += "push constant 0\n";
+        public override object? VisitReturnStatement(JackParser.ReturnStatementContext context)
+        {
+            StringBuilder output = new StringBuilder();
+
+            if (context.expression() != null)
+            {
+                output.Append(Visit(context.expression()));
             }
-            output += "return\n";
-            return output;
+            else
+            {
+                output.AppendLine("push constant 0");
+            }
+
+            output.AppendLine("return");
+            return output.ToString();
         }
     }
-
 
     public struct Entry
     {
