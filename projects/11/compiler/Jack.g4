@@ -24,7 +24,8 @@ statement : letStatement
             | returnStatement
             | ifStatement
             | whileStatement
-            | doStatement;
+            | doStatement
+            ;
 
 letStatement : 'let' varName chainArrayAccess? '=' expression ';';
 
@@ -62,13 +63,17 @@ term : integerConstant
             | unaryTerm
             | varName
             | parenthesisExpression
-            | arrayAccess;
+            | arrayAccess
+            | stringConstant
+            ;
 
 unaryTerm : unaryOp term;
 
 integerConstant : INTEGER_CONSTANT;
 
 keywordConstant : KEYWORD_CONSTANT;
+
+stringConstant : STRING_CONSTANT;
 
 parenthesisExpression : '(' expression ')';
 
@@ -94,24 +99,8 @@ KEYWORD_CONSTANT : 'true' | 'false' | 'null' | 'this';
 
 INTEGER_CONSTANT : [0-9]+;
 
-ID: [a-zA-Z]+;
+STRING_CONSTANT : '"' (~["\\\r\n])* '"';
+
+ID: [a-zA-Z_][a-zA-Z0-9_]*;
 
 WS: [ \t\r\n]+ -> skip;
-/*
-
-
-doStatement : 'do' '(' expressionList ')' ';';
-
-returnStatement : 'return' expression? ';';
-
-expressionList : (expression (',' expression)*)?;
-
-expression : term (op term)*;
-
-term : INTEGER_CONSTANT | STRING_CONSTANT | KEYWORD_CONSTANT | varName | varName '[' expression ']' | subRoutineCall | '(' expression ')' | unaryOp term;
-
-subRoutineCall : ID '(' expressionList ')' | (ID '.') ID '(' expressionList ')';
-
-unaryOp : '-' | '~';
-
-*/

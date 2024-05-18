@@ -161,9 +161,10 @@ namespace Compiler.Visitor
                     output += Visit(context.expression());
                     output += "pop temp 0\n";
                     output += "pop pointer 1\n";
-                    output += "pop temp 0\n";
+                    output += "push temp 0\n";
                     output += "pop that 0\n";
                 } else {
+                    output += Visit(context.expression());
                     output += $"pop {entry.Value.Kind} {entry.Value.Offset}\n";
                 }
             } else {
@@ -251,6 +252,18 @@ namespace Compiler.Visitor
                 output += "push that 0\n";
             } else {
                 throw new Exception($"Variable {name} not found");
+            }
+            return output;
+        }
+
+        public override object? VisitStringConstant(JackParser.StringConstantContext context) {
+            string str = context.GetText();
+            str = str.Substring(1, str.Length - 2);
+            string output = $"push constant {str.Length}\n";
+            output += "call String.new 1\n";
+            foreach (char c in str) {
+                output += $"push constant {(int)c}\n";
+                output += "call String.appendChar 2\n";
             }
             return output;
         }
