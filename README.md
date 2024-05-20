@@ -28,4 +28,4 @@ Most of the chips are visualized in logic gates [here](https://circuitverse.org/
 | High-Level Language            | :white_check_mark: |              |
 | Compiler I: Syntax Analysis    | :white_check_mark: | Elixir       |
 | Compiler II: Code generation   | :white_check_mark: | C#(Antlr)    |
-| Operating System               |                    |              |
+| Operating System               | :white_check_mark: |              |
